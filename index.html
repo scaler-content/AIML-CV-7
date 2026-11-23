@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Computer Vision 7 post read</title>
+<style>
+
+:root{
+  --bg:#F3ECD9; --paper:#FBF7EB; --sand:#E7DBBE; --sand-d:#CDBE96; --line:#D5C7A3;
+  --ink:#18261F; --muted:#47574D;
+  --g900:#12392A; --g700:#1D5A41; --g500:#3A8660; --g200:#BCD9C4; --g100:#DDEBDD;
+  --clay:#9A5F33; --clay-100:#EBD5BC;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--g700)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--g500);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(243,236,217,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:8px 20px}
+.brand{font:700 .95rem var(--serif);color:var(--g900);white-space:nowrap}
+.toc{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;flex:1}
+.toc a{white-space:nowrap;text-decoration:none;font-size:.82rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:999px}
+.toc a:hover{background:var(--sand)}
+.toc a.on{background:var(--g700);color:#fff}
+.bar{height:3px;background:transparent}
+.bar i{display:block;height:100%;width:0;background:var(--g500)}
+
+/* hero */
+.hero{background:var(--g900);color:var(--paper);padding:72px 20px 64px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px,
+  linear-gradient(0deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px;pointer-events:none}
+.hero-in{max-width:860px;margin:0 auto;position:relative;z-index:1}
+.kicker{font:700 .78rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--g200)}
+.hero h1{font:700 clamp(2.2rem,5.5vw,3.6rem)/1.1 var(--serif);margin:.3em 0 .35em}
+.hero p.lede{font-size:1.2rem;max-width:36em;color:#E9E2CD;margin:0 0 30px}
+.obj{background:rgba(243,236,217,.1);border:1px solid rgba(243,236,217,.25);border-radius:14px;padding:20px 24px}
+.obj h2{font:700 .78rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--g200);margin:0 0 10px}
+.obj ol{margin:0;padding-left:1.3em}
+.obj li{margin:.3em 0}
+
+/* layout */
+main{max-width:860px;margin:0 auto;padding:0 20px 40px}
+section.sec{padding-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.num{font:700 .9rem var(--mono);color:var(--paper);background:var(--g700);border-radius:6px;padding:2px 8px}
+h2.t{font:700 clamp(1.6rem,3.4vw,2.2rem)/1.2 var(--serif);color:var(--g900);margin:0}
+h3{font:700 1.2rem/1.3 var(--serif);color:var(--g900);margin:1.8em 0 .4em}
+p{margin:.7em 0}
+ul,ol{padding-left:1.3em}
+li{margin:.3em 0}
+code{font:.88em var(--mono);background:var(--sand);padding:.1em .35em;border-radius:4px}
+pre{background:var(--g900);color:#EFE9D4;padding:16px 18px;border-radius:12px;overflow-x:auto;font:.85rem/1.55 var(--mono);margin:10px 0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .out{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(243,236,217,.3);color:var(--g200)}
+details.code{margin:12px 0}
+details.code>summary{cursor:pointer;font-weight:600;color:var(--g700);padding:4px 0}
+
+/* callouts */
+.callout{border-left:5px solid var(--g500);background:var(--g100);border-radius:0 12px 12px 0;padding:12px 18px;margin:18px 0}
+.callout b.lab{display:block;font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700)}
+.callout.warm{border-color:var(--clay);background:var(--clay-100)}
+.callout.warm b.lab{color:var(--clay)}
+.callout p{margin:.3em 0}
+
+/* tables */
+.tw{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;background:var(--paper);font-size:.95rem}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--g700);color:#fff;font-weight:600}
+td.k{font-weight:700;color:var(--g900)}
+tbody tr:hover td{background:var(--g100)}
+
+/* widget shell */
+.viz{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px 20px;margin:22px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.viz>.vt{font:700 .78rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0 0 4px}
+.viz>.vd{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.col{flex:1 1 260px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.controls label{font-size:.9rem;font-weight:600;color:var(--muted)}
+.btn,.seg button,.chip{font:600 .88rem var(--sans);border:1.5px solid var(--g700);background:transparent;color:var(--g700);padding:6px 13px;border-radius:999px;cursor:pointer}
+.btn:hover,.seg button:hover,.chip:hover{background:var(--g100)}
+.btn.solid,.seg button[aria-pressed=true],.chip[aria-pressed=true]{background:var(--g700);color:#fff}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+input[type=number],select{font:600 .95rem var(--mono);padding:6px 8px;border:1.5px solid var(--sand-d);border-radius:8px;background:#fff;color:var(--ink);width:5.2em}
+select{width:auto;font-family:var(--sans)}
+input[type=range]{accent-color:var(--g700);width:100%;max-width:300px}
+.readout{background:var(--g100);border-radius:10px;padding:10px 14px;font-size:.95rem;margin-top:10px}
+.readout b{font-family:var(--mono)}
+.big{font:700 clamp(1.8rem,5vw,2.6rem)/1.1 var(--serif);color:var(--g900)}
+.sw{display:inline-block;width:1.4em;height:1.4em;border-radius:5px;border:1.5px solid rgba(0,0,0,.35);vertical-align:-.3em;margin-right:.4em}
+.cap{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+.mono{font-family:var(--mono)}
+
+/* grids */
+.g{display:grid;gap:2px;grid-template-columns:repeat(var(--cols),1fr)}
+.g .c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:600 .8rem/1 var(--mono);border-radius:3px;background:var(--sand);color:var(--ink);overflow:hidden}
+.g.tight{gap:1px}
+.px{font-size:.6rem!important}
+.c.sel{outline:3px solid var(--ink);outline-offset:-3px;z-index:1}
+#pix-grid{max-width:480px;cursor:crosshair;border:2px solid var(--g900);border-radius:6px;padding:0;background:var(--g900)}
+#pix-grid:focus-visible{outline:3px solid var(--g500);outline-offset:3px}
+.mat{max-width:260px}
+.mat .c{font-size:1rem;aspect-ratio:1.15}
+.hl{background:var(--g200)!important;outline:2px solid var(--g700);outline-offset:-2px}
+.obj-c{background:var(--g500)!important;color:#fff}
+.w-c{box-shadow:inset 0 0 0 2px var(--clay)}
+.pad-c{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)!important}
+.lbl{font:700 .78rem var(--sans);color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em}
+button.c{border:0;cursor:pointer;font:inherit}
+.filt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:200px}
+.filt input{width:100%;text-align:center;padding:8px 2px}
+.sumline{font:.9rem/1.5 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:10px;padding:10px 14px;overflow-x:auto;margin-top:10px}
+.arrow{align-self:center;font-size:1.6rem;color:var(--g700);padding:0 4px}
+
+/* pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.pill{min-width:64px;text-align:center;border-radius:10px;padding:6px 10px;color:#fff;font-weight:700;line-height:1.2}
+.pill small{display:block;font:600 .72rem var(--sans);opacity:.9}
+.pill span{font:700 1.3rem var(--mono)}
+.p-H{background:var(--g700)}.p-W{background:var(--g500)}.p-C{background:var(--clay)}.p-B{background:var(--g900)}
+
+/* math */
+.math{font:1.1rem var(--serif);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin:14px 0;overflow-x:auto;text-align:center}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .25em;font-size:.95em}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em}
+.frac>span:last-child{padding:0 .3em}
+sub{font-size:.7em}
+
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.node{font:700 .9rem var(--sans);padding:10px 14px;border-radius:12px;border:2px solid var(--g700);background:var(--paper);color:var(--g900);cursor:pointer}
+.node[aria-pressed=true]{background:var(--g700);color:#fff}
+.node.io{border-style:dashed;cursor:default;border-color:var(--sand-d);color:var(--muted)}
+.grp{border:2px dashed var(--g500);border-radius:16px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.grp>.gl{font:700 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.grp>.ns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sep{color:var(--g700);font-weight:700}
+
+/* bars */
+.bars .br{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin:8px 0;font-size:.92rem}
+.bars .tr{background:var(--sand);border-radius:8px;height:26px;overflow:hidden;position:relative}
+.bars .fl{height:100%;background:var(--g700);min-width:3px;border-radius:8px 0 0 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font:700 .78rem var(--mono);white-space:nowrap}
+.bars .fl.alt{background:var(--clay)}
+.bars .vl{margin-left:8px;font:700 .85rem var(--mono);color:var(--ink)}
+
+/* layer ribbon */
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.layer{text-align:left;border:2px solid var(--g700);background:var(--paper);border-radius:12px;padding:10px;cursor:pointer;font:inherit;color:var(--ink)}
+.layer[aria-pressed=true]{background:var(--g700);color:#fff}
+.layer b{display:block;font-size:.85rem}
+.layer span{display:block;font:.78rem var(--mono);margin-top:4px;word-break:break-all}
+
+/* strip (stride/padding) */
+.strip{display:flex;gap:2px;overflow-x:auto;padding:4px 0}
+.strip .s{flex:0 0 auto;width:16px;height:30px;border-radius:3px;background:var(--g200)}
+.strip .s.p{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)}
+.strip .s.w{background:var(--g700)}
+.strip .o{background:var(--g500);opacity:.35}
+.strip .o.cur{opacity:1;background:var(--clay)}
+
+/* quiz */
+.quiz{background:var(--g100);border:1px solid var(--g200);border-radius:14px;padding:16px 20px;margin:20px 0}
+.quiz .ql{font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0}
+.quiz .qt{font-weight:600;margin:.3em 0 .6em}
+.quiz fieldset{border:0;padding:0;margin:0}
+.qo{margin:6px 0}
+.qo input{position:absolute;opacity:0}
+.qo label{display:block;border:2px solid var(--g200);background:var(--paper);padding:9px 14px;border-radius:10px;cursor:pointer}
+.qo label:hover{border-color:var(--g500)}
+.qo input:focus-visible+label{outline:3px solid var(--g500);outline-offset:2px}
+.qo.right label{border-color:var(--g700);background:#fff;box-shadow:inset 6px 0 0 var(--g700)}
+.qo.wrong label{border-color:var(--clay);background:var(--clay-100);box-shadow:inset 6px 0 0 var(--clay)}
+.qfb{margin-top:10px;font-size:.95rem}
+
+/* details / flashcards */
+details.dq{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin:10px 0}
+details.dq summary{cursor:pointer;font-weight:600;padding:10px 0;color:var(--g900)}
+.fcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.fc{text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--g700);border-radius:14px;padding:16px;cursor:pointer;min-height:150px}
+.fc .q{font-weight:700;color:var(--g900)}
+.fc .a{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--g500)}
+.fc[aria-expanded=true]{background:var(--g100)}
+.fc[aria-expanded=true] .a{display:block}
+.fc .hint{display:block;margin-top:10px;font-size:.8rem;color:var(--g700);font-weight:600}
+.fc[aria-expanded=true] .hint{display:none}
+.take{counter-reset:t;list-style:none;padding:0}
+.take li{counter-increment:t;display:flex;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.take li::before{content:counter(t);flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--g700);color:#fff;font:700 .9rem var(--sans);display:grid;place-items:center}
+
+footer{background:var(--g900);color:var(--g200);text-align:center;padding:28px 20px;font:600 .95rem var(--serif);margin-top:40px}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .hero{padding:48px 16px 44px}
+  .viz{padding:14px}
+  .brand{display:none}
+  .bars .br{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.chart{width:100%;height:auto;display:block;touch-action:pan-y}
+.chart text{font-family:var(--sans);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 4px;font-size:.85rem;font-weight:600}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:34px;height:12px}
+.tag{display:inline-block;font:700 .75rem var(--sans);background:var(--g100);color:var(--g700);border:1px solid var(--g200);border-radius:999px;padding:1px 10px;margin:2px 3px 2px 0}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.mini{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--g500);border-radius:12px;padding:12px 16px}
+.mini.c2{border-top-color:var(--clay)}.mini.c3{border-top-color:var(--g900)}
+.mini b{display:block;font:700 .78rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.unit{aspect-ratio:1;border-radius:50%;background:var(--g500);display:flex;align-items:center;justify-content:center;color:#fff;font:700 .8rem var(--mono)}
+.unit.off{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px);color:var(--ink);border:2px dashed var(--clay)}
+.frame{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 .78rem var(--mono);color:#fff;border:3px solid transparent}
+.frame.tr{background:var(--g700)}.frame.va{background:var(--clay)}
+.frame.dup{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.flow{display:flex;flex-direction:column;gap:6px;max-width:420px;margin:14px auto}
+.flow div{background:var(--g700);color:#fff;border-radius:10px;padding:10px 16px;text-align:center;font-weight:600}
+.flow div:nth-child(even){background:transparent;color:var(--g700);padding:0;font-size:1.3rem;line-height:1}
+.flow div:last-child{background:var(--g900)}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.ex .nums{font:.95rem/1.6 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:8px;padding:8px 12px;margin:6px 0;white-space:pre-wrap}
+.step6{counter-reset:s;list-style:none;padding:0}
+.step6 li{counter-increment:s;display:flex;gap:12px;margin:6px 0}
+.step6 li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;background:var(--g700);color:#fff;font:700 .85rem var(--sans);display:grid;place-items:center}
+
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-align:center}
+.stat b{display:block;font:700 1.7rem var(--serif);color:var(--g900)}
+.stat span{font-size:.82rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.nb{display:inline-flex;align-items:center;justify-content:center;min-width:64px;padding:8px 10px;margin:3px;border-radius:10px;border:3px solid var(--g700);background:var(--g100);font:700 .85rem var(--mono);cursor:pointer;color:var(--ink)}
+.nb.no{border-color:var(--clay);background:var(--clay-100)}
+.ck{display:flex;gap:10px;align-items:flex-start;margin:6px 0}
+.sv{width:100%;max-width:360px;border:2px solid var(--line);border-radius:10px;background:var(--paper)}
+.sv text{font:700 5px var(--mono);fill:#18261F}
+.fm{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:340px}
+.fm div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--sand);border-radius:4px;font:600 .8rem var(--mono)}
+.fm div.w{background:var(--g200);outline:2px solid var(--g700)}
+.fm div.m{background:var(--g700);color:#fff}
+.o2{display:grid;grid-template-columns:repeat(2,64px);gap:4px}
+.o2 div{height:56px;display:flex;align-items:center;justify-content:center;background:var(--g700);color:#fff;border-radius:6px;font:700 1rem var(--mono)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <span class="brand">Computer Vision 7 post read</span>
+    <nav class="toc" aria-label="Sections" id="toc"></nav>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+</header>
+
+<div class="hero">
+  <div class="hero-in">
+    <div class="kicker">Computer Vision · Object localization and the R-CNN family</div>
+    <h1>Computer Vision 7 post read</h1>
+    <p class="lede">From “what is in this image?” to “where is each object?”: bounding boxes, IoU, sliding windows, NMS, and the R-CNN, Fast R-CNN and Faster R-CNN family, ending with inference from a pretrained detector.</p>
+    <div class="obj">
+      <h2>Learning outcomes</h2>
+      <ol>
+        <li>Classification vs. localization vs. detection</li>
+        <li>Bounding boxes, coordinates and class probabilities</li>
+        <li>A ResNet101 localizer with classification and regression heads</li>
+        <li>IoU and mean box IoU</li>
+        <li>Sliding windows, duplicate detections and NMS</li>
+        <li>R-CNN, Fast R-CNN, Faster R-CNN: architecture and limits</li>
+        <li>Inspecting a pretrained detector's boxes, labels and scores</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- 1 -->
+<section class="sec" id="what" aria-labelledby="h-w" data-nav="What vs. where">
+  <div class="sec-head"><span class="num">01</span><h2 class="t" id="h-w">From “what” to “where”</h2></div>
+  <p>SafeSight, a visual inspection system, receives an image and must answer two different questions: <b>what is present?</b> and <b>where is each object?</b> Embeddings (the previous topic) are great for “find images like this one”, but they do not give the coordinates of any object. Localization adds a location to a class prediction, and detection extends this to many objects.</p>
+  <div class="viz" id="task-viz">
+    <p class="vt">Visualizer · Three tasks, one image</p>
+    <p class="vd">A scene with a dog and a cat (illustrative drawing). Choose the task to see what the model must output.</p>
+    <div class="controls"><div class="seg" id="tk-seg" role="group" aria-label="Task"></div></div>
+    <svg id="tk-svg" class="sv" viewBox="0 0 200 120" role="img" aria-label="Illustrative scene with a dog and a cat"></svg>
+    <div class="readout" id="tk-read" aria-live="polite"></div>
+  </div>
+  <p>If a model returns only “animal” for a photo with a dog and a cat, what is missing for an application that must count each animal? The individual instances, their classes, and their locations.</p>
+  <div class="quiz" data-quiz="q1"></div>
+  <div class="quiz" data-quiz="q2"></div>
+</section>
+
+<!-- 2 -->
+<section class="sec" id="boxes" aria-labelledby="h-b" data-nav="Bounding boxes">
+  <div class="sec-head"><span class="num">02</span><h2 class="t" id="h-b">Bounding boxes and dataset design</h2></div>
+  <p>Two common representations: <code>(x_min, y_min, x_max, y_max)</code> (top-left and bottom-right corners) and <code>(x_center, y_center, width, height)</code>. Always check the dataset's convention before training. For an image of width W and height H, valid pixel coordinates satisfy <code>0 ≤ x_min &lt; x_max ≤ W</code> and <code>0 ≤ y_min &lt; y_max ≤ H</code>.</p>
+  <div class="viz" id="box-viz">
+    <p class="vt">Visualizer · Box formats and validity</p>
+    <div class="controls"><label>W <input type="number" id="bx-W" value="640" min="1" style="width:5em"></label><label>H <input type="number" id="bx-H" value="480" min="1" style="width:5em"></label><label>x_min <input type="number" id="bx-a" value="120" style="width:5em"></label><label>y_min <input type="number" id="bx-b" value="80" style="width:5em"></label><label>x_max <input type="number" id="bx-c" value="420" style="width:5em"></label><label>y_max <input type="number" id="bx-d" value="360" style="width:5em"></label></div>
+    <svg id="bx-svg" class="sv" role="img" aria-label="Bounding box inside the image frame"></svg>
+    <div class="readout" id="bx-read" aria-live="polite"></div>
+  </div>
+  <h3>Dataset exploration checklist</h3>
+  <p>The method applies to any detection dataset, including a safety-critical one such as weapon detection. A model is not safe or reliable merely because it trains: a dataset-specific detector needs a separately reviewed dataset, annotation policy and deployment safeguards.</p>
+  <div class="viz" id="chk-viz">
+    <p class="vt">Visualizer · Dataset and deployment review</p>
+    <div class="controls"><div class="seg" id="ck-seg" role="group" aria-label="Question"></div></div>
+    <div class="readout" id="ck-read" aria-live="polite"></div>
+  </div>
+  <p>Annotation audits should check coordinate validity, tightness, missing objects, duplicate labels, class consistency, occlusion, train/test leakage and class imbalance.</p>
+</section>
+
+<!-- 3 -->
+<section class="sec" id="localizer" aria-labelledby="h-l" data-nav="Localization model">
+  <div class="sec-head"><span class="num">03</span><h2 class="t" id="h-l">Building an object-localization model</h2></div>
+  <p>A pretrained <b>ResNet101</b> is the feature extractor. Its final classification layer is replaced by two task-specific heads: a <b>classification head</b> (target class) and a <b>regression head</b> (four box coordinates). The model learns two related but different tasks.</p>
+  <div class="viz" id="arch-viz">
+    <p class="vt">Visualizer · The two-head localizer</p>
+    <div class="pipe" id="ar-pipe"></div>
+    <div class="readout" id="ar-read" aria-live="polite"></div>
+  </div>
+  <p>Each training example needs an image tensor, a class label, a target box, a consistent coordinate convention and a train/validation/test split. Geometric augmentations must transform the box too: if an image is flipped horizontally, the box must be flipped as well.</p>
+  <h3>Why predict centre and size, not four corners?</h3>
+  <p>Four independent sigmoid outputs lie in [0, 1] but do <b>not</b> guarantee <code>x_min ≤ x_max</code> or <code>y_min ≤ y_max</code>. The teaching head predicts normalized <code>(centre_x, centre_y, width, height)</code> and converts to clipped corners, which guarantees ordered corners. (A production detector uses its own box parameterization and decoding; this is a clear single-target example, not Faster R-CNN's internal head.)</p>
+  <div class="viz" id="dec-viz">
+    <p class="vt">Visualizer · Four sigmoid outputs, two ways to read them</p>
+    <div class="controls"><div class="seg" id="dc-seg" role="group" aria-label="Decoding"></div></div>
+    <div class="controls" id="dc-c"></div>
+    <svg id="dc-svg" class="sv" viewBox="0 0 100 100" role="img" aria-label="Decoded box in normalized coordinates"></svg>
+    <div class="readout" id="dc-read" aria-live="polite"></div>
+  </div>
+  <h3>The training objective</h3>
+  <div class="math" style="text-align:center;font:700 1.15rem var(--serif);margin:8px 0">L_total = L_classification + λ × L_box</div>
+  <p>λ balances the two loss scales. Classification uses cross-entropy; box regression can use Smooth L1. The recorded illustration uses two images, three classes, and λ = 1.</p>
+  <div class="viz" id="loss-viz">
+    <p class="vt">Visualizer · Loss for a toy batch</p>
+    <div class="controls"><label for="ls-l">λ</label><input type="range" id="ls-l" min="0" max="100" value="1" style="max-width:240px"> <b class="mono" id="ls-lv"></b></div>
+    <div class="bars" id="ls-bars"></div>
+    <div class="readout" id="ls-read" aria-live="polite"></div>
+    <p class="cap">Logits [[2.0, 0.4, −0.2], [0.1, 1.8, 0.3]] with targets [0, 1]; predicted boxes [[.1,.2,.7,.8],[.2,.1,.8,.9]] vs. targets [[.12,.18,.68,.82],[.22,.12,.78,.88]]. The values are recomputed live from these tensors: cross-entropy 0.3064, box loss 0.0002.</p>
+  </div>
+  <p>Notice how small the box loss is next to the classification loss: this is exactly why λ exists. Actual training must also mask invalid or missing boxes and make sure the target box format matches the model output.</p>
+  <div class="callout warm"><b class="lab">Scope</b><p>The notebook defines this architecture and its output format but includes no labelled localization dataset, so it does not claim to train or validate a custom ResNet101 localizer, and no localization accuracy is reported here.</p></div>
+  <div class="quiz" data-quiz="q4"></div>
+  <details class="code"><summary>Code: the model</summary>
+<pre><code>class ResNet101Localizer(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        backbone = resnet101(weights=ResNet101_Weights.DEFAULT)
+        in_features = backbone.fc.in_features
+        backbone.fc = nn.Identity()
+        self.backbone = backbone
+        self.classifier = nn.Linear(in_features, num_classes)
+        self.box_regressor = nn.Sequential(nn.Linear(in_features, 256), nn.ReLU(), nn.Linear(256, 4), nn.Sigmoid())
+    def forward(self, images):
+        features = self.backbone(images)
+        class_logits = self.classifier(features)
+        cx, cy, width, height = self.box_regressor(features).unbind(dim=1)
+        x1 = (cx - width / 2).clamp(0, 1); y1 = (cy - height / 2).clamp(0, 1)
+        x2 = (cx + width / 2).clamp(0, 1); y2 = (cy + height / 2).clamp(0, 1)
+        return class_logits, torch.stack((x1, y1, x2, y2), dim=1)
+<span class="out">classification: 0.3064
+box regression: 0.0002
+total: 0.3066</span></code></pre></details>
+</section>
+
+<!-- 4 -->
+<section class="sec" id="iou" aria-labelledby="h-i" data-nav="IoU">
+  <div class="sec-head"><span class="num">04</span><h2 class="t" id="h-i">Evaluating localization: Intersection over Union</h2></div>
+  <p>A model can predict the correct class but place the box poorly, so classification metrics alone are insufficient.</p>
+  <div class="math" style="text-align:center;font:700 1.15rem var(--serif);margin:8px 0">IoU = Area(predicted ∩ ground truth) / Area(predicted ∪ ground truth)</div>
+  <p>0 means no overlap, 1 means perfect overlap; larger means better alignment.</p>
+  <div class="viz" id="iou-viz">
+    <p class="vt">Visualizer · Move the predicted box</p>
+    <p class="vd">Ground truth is fixed at (10, 10, 60, 60). The default prediction (20, 20, 70, 70) gives the lecture's 0.471.</p>
+    <div class="controls" id="io-c"></div>
+    <svg id="io-svg" class="sv" viewBox="0 0 100 100" role="img" aria-label="Ground-truth and predicted boxes with their overlap"></svg>
+    <div class="readout" id="io-read" aria-live="polite"></div>
+  </div>
+  <div class="viz" id="miou-viz">
+    <p class="vt">Visualizer · Mean box IoU</p>
+    <p class="vd">Compute IoU for every evaluated image that has a ground-truth box, then average. Edit the per-image IoUs (illustrative).</p>
+    <div class="controls" id="mi-c"></div>
+    <div class="readout" id="mi-read" aria-live="polite"></div>
+  </div>
+  <div class="callout warm"><b class="lab">Say which “mIoU” you mean</b><p>Report this average as <b>mean box IoU</b>. Object-detection <b>mAP</b> matches predicted detections to ground-truth objects across confidence thresholds and is a different metric. For semantic segmentation, “mIoU” usually means class-wise <i>pixel</i> IoU averaged over classes. State the definition whenever you report a metric.</p></div>
+  <div class="quiz" data-quiz="q3"></div>
+  <details class="code"><summary>Code and output</summary>
+<pre><code>def box_iou(box_a, box_b):               # each box: (x1, y1, x2, y2)
+    ax1, ay1, ax2, ay2 = box_a; bx1, by1, bx2, by2 = box_b
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1); ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    intersection = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+    area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1); area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+    union = area_a + area_b - intersection
+    return intersection / union if union > 0 else 0.0
+<span class="out">IoU = 0.471</span></code></pre></details>
+  <p>An optional CSV-backed training template exists for a correctly annotated, consented single-target dataset (<code>annotations.csv</code> with <code>image_path, class_id, x_min, y_min, x_max, y_max, split</code>, coordinates normalized to [0, 1], one target box per image; 2 epochs with Adam at 1e-4, reporting train loss, accuracy, validation accuracy and mean box IoU). In the recorded notebook it was skipped because no dataset was supplied.</p>
+</section>
+
+<!-- 5 -->
+<section class="sec" id="multi" aria-labelledby="h-m" data-nav="Sliding windows, NMS">
+  <div class="sec-head"><span class="num">05</span><h2 class="t" id="h-m">From one object to many: sliding windows and NMS</h2></div>
+  <p>A single-target localizer predicts one box, but a real image can contain many objects, so we need to propose and evaluate multiple candidate regions. <b>Sliding window:</b> place a window, classify the crop or score it for an object, move across the image, and repeat at multiple window sizes.</p>
+  <div class="viz" id="win-viz">
+    <p class="vt">Visualizer · Why sliding windows are expensive</p>
+    <div class="controls"><label>Image W <input type="number" id="wn-W" value="640" min="1" style="width:5em"></label><label>Image H <input type="number" id="wn-H" value="480" min="1" style="width:5em"></label><label>Window <input type="number" id="wn-w" value="128" min="1" style="width:4.5em"></label><label>Stride <input type="number" id="wn-s" value="16" min="1" style="width:4em"></label><label>Scales <input type="number" id="wn-n" value="3" min="1" max="10" style="width:3.5em"></label></div>
+    <div class="readout" id="wn-read" aria-live="polite"></div>
+    <p class="cap">Illustrative numbers. Per scale: windows = ((W − w)/stride + 1) × ((H − w)/stride + 1) for a square window; scales are assumed at 1×, 1.5×, 2×, … of the base window for the count. Most windows contain background, objects may not match the chosen shapes, and one object is hit by many overlapping windows.</p>
+  </div>
+  <h3>Non-Maximum Suppression</h3>
+  <ol class="step6"><li>Sort candidate boxes by confidence score.</li><li>Keep the highest-scoring box.</li><li>Compare it with the remaining boxes using IoU.</li><li>Suppress boxes whose overlap exceeds the NMS threshold.</li><li>Repeat.</li></ol>
+  <div class="viz" id="nms-viz">
+    <p class="vt">Visualizer · NMS and two different thresholds</p>
+    <p class="vd">The lecture's toy boxes: scores 0.95 and 0.88 strongly overlap, 0.72 is separate.</p>
+    <div class="controls"><label for="nm-i">NMS IoU threshold</label><input type="range" id="nm-i" min="5" max="95" value="50" style="max-width:200px"> <b class="mono" id="nm-iv"></b><label for="nm-c">Confidence threshold</label><input type="range" id="nm-c" min="0" max="100" value="0" style="max-width:200px"> <b class="mono" id="nm-cv"></b></div>
+    <svg id="nm-svg" class="sv" viewBox="0 0 210 110" role="img" aria-label="Three candidate boxes and what NMS keeps"></svg>
+    <div class="readout" id="nm-read" aria-live="polite"></div>
+  </div>
+  <div class="callout warm"><b class="lab">Do not mix up the thresholds</b><p><b>Confidence threshold</b> removes low-score predictions. <b>NMS IoU threshold</b> removes overlapping duplicates. NMS does not simply keep one box per image: it suppresses sufficiently overlapping candidates, typically within a class.</p></div>
+  <details class="code"><summary>Code and output</summary>
+<pre><code>example_boxes = torch.tensor([[10.,10.,100.,100.], [15.,15.,98.,98.], [120.,20.,200.,100.]])
+example_scores = torch.tensor([0.95, 0.88, 0.72])
+for iou_threshold in (0.3, 0.7):
+    kept = nms(example_boxes, example_scores, iou_threshold)
+<span class="out">NMS IoU threshold=0.3: kept box indices [0, 2]
+NMS IoU threshold=0.7: kept box indices [0, 2]</span></code></pre></details>
+</section>
+
+<!-- 6 -->
+<section class="sec" id="rcnn" aria-labelledby="h-r" data-nav="R-CNN">
+  <div class="sec-head"><span class="num">06</span><h2 class="t" id="h-r">R-CNN</h2></div>
+  <p><b>R-CNN</b> (Region-based Convolutional Neural Network) uses region proposals to decide which parts of an image deserve classification.</p>
+  <div class="viz" id="rc-viz">
+    <p class="vt">Visualizer · The original R-CNN pipeline</p>
+    <div class="pipe" id="rc-pipe"></div>
+    <div class="readout" id="rc-read" aria-live="polite"></div>
+  </div>
+  <p><b>Main limitation:</b> running the CNN separately for many proposals is computationally expensive and repeats feature extraction for overlapping regions; training also has multiple stages. Fast R-CNN fixes the repeated work:</p>
+  <div class="viz" id="cost-viz">
+    <p class="vt">Visualizer · CNN passes per image</p>
+    <div class="controls"><label>Proposals <input type="number" id="cs-n" value="2000" min="1" style="width:6em"></label></div>
+    <div class="bars" id="cs-bars"></div>
+    <div class="readout" id="cs-read" aria-live="polite"></div>
+    <p class="cap">Counts of backbone passes only (R-CNN: one per proposal; Fast R-CNN: one for the whole image). The proposal count is illustrative, and per-pass cost differs, since R-CNN's passes are on small warped crops.</p>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="sec" id="fast" aria-labelledby="h-f" data-nav="Fast R-CNN">
+  <div class="sec-head"><span class="num">07</span><h2 class="t" id="h-f">Fast R-CNN</h2></div>
+  <ol class="step6"><li>Run the full image through a CNN backbone <b>once</b>.</li><li>Get region proposals (e.g. Selective Search).</li><li>Map each proposal onto the shared feature map.</li><li>Apply <b>ROI Pooling</b> to get a fixed-size representation.</li><li>Task-specific heads output class probabilities and box refinement.</li></ol>
+  <p>Proposals differ in size but fully connected layers expect a fixed-size input, so ROI Pooling converts each region to a fixed spatial size.</p>
+  <div class="viz" id="roi-viz">
+    <p class="vt">Visualizer · ROI Pooling to a fixed 2 × 2</p>
+    <p class="vd">An 8 × 8 feature map (illustrative values). Choose a region of any size: it is split into a 2 × 2 grid of bins and max-pooled in each.</p>
+    <div class="controls"><label>Row <input type="number" id="ro-y" value="1" min="0" max="7" style="width:3.5em"></label><label>Col <input type="number" id="ro-x" value="2" min="0" max="7" style="width:3.5em"></label><label>Height <input type="number" id="ro-h" value="5" min="2" max="8" style="width:3.5em"></label><label>Width <input type="number" id="ro-w" value="4" min="2" max="8" style="width:3.5em"></label></div>
+    <div class="row"><div class="col" style="flex-basis:320px"><div class="fm" id="ro-fm"></div></div><div class="col" style="flex-basis:160px"><div class="lbl">Fixed-size output</div><div class="o2" id="ro-out"></div></div></div>
+    <div class="readout" id="ro-read" aria-live="polite"></div>
+  </div>
+  <p><b>What Fast R-CNN does not solve:</b> it still depends on an external proposal method such as Selective Search, which remains a separate bottleneck.</p>
+  <div class="callout warm"><b class="lab">ROI Pooling vs. ROI Align</b><p>The original Fast R-CNN paper introduced ROI Pooling. Modern TorchVision Faster R-CNN ResNet-FPN models use <code>MultiScaleRoIAlign</code>, an ROI Align-style operator. Both give fixed-size region features, but ROI Align avoids the coordinate quantization of classic ROI Pooling, so do not call the TorchVision operator classic ROI Pooling.</p></div>
+  <div class="quiz" data-quiz="q5"></div>
+  <div class="quiz" data-quiz="q6"></div>
+</section>
+
+<!-- 8 -->
+<section class="sec" id="faster" aria-labelledby="h-fr" data-nav="Faster R-CNN">
+  <div class="sec-head"><span class="num">08</span><h2 class="t" id="h-fr">Faster R-CNN</h2></div>
+  <p>Faster R-CNN removes the external proposal bottleneck with a <b>Region Proposal Network (RPN)</b> that shares convolutional features with the detection network.</p>
+  <div class="viz" id="fr-viz">
+    <p class="vt">Visualizer · Two-stage pipeline</p>
+    <div class="pipe" id="fr-pipe"></div>
+    <div class="readout" id="fr-read" aria-live="polite"></div>
+  </div>
+  <h3>Anchors and the RPN</h3>
+  <p>At each feature-map location, the RPN considers several <b>anchor</b> boxes (reference boxes with different scales and aspect ratios). For each it predicts <b>objectness</b> (does this anchor likely contain an object?) and <b>box offsets</b> (how to move and resize it to fit better). The proposals are then filtered and passed to the detection head.</p>
+  <div class="viz" id="anc-viz">
+    <p class="vt">Visualizer · Anchors at one location</p>
+    <p class="vd">Illustrative sizes. Choose scales and aspect ratios; anchors are drawn at a chosen feature-map location.</p>
+    <div class="controls"><label>Scales <input type="number" id="an-s" value="3" min="1" max="4" style="width:3.5em"></label><label>Aspect ratios <input type="number" id="an-r" value="3" min="1" max="3" style="width:3.5em"></label><label>Feature map H <input type="number" id="an-H" value="30" min="1" style="width:4em"></label><label>W <input type="number" id="an-W" value="40" min="1" style="width:4em"></label></div>
+    <svg id="an-svg" class="sv" viewBox="0 0 100 100" role="img" aria-label="Anchor boxes centred on one location"></svg>
+    <div class="readout" id="an-read" aria-live="polite"></div>
+  </div>
+  <h3>Combined losses</h3>
+  <ul><li>RPN objectness classification loss</li><li>RPN box regression loss</li><li>Final detection classification loss</li><li>Final box regression loss</li></ul>
+  <h3>The family compared</h3>
+  <div class="viz" id="fam-viz">
+    <p class="vt">Visualizer · R-CNN → Fast R-CNN → Faster R-CNN</p>
+    <div class="controls"><div class="seg" id="fm-seg" role="group" aria-label="Model"></div></div>
+    <div class="readout" id="fm-read" aria-live="polite"></div>
+  </div>
+  <div class="tw"><table><thead><tr><th>Model</th><th>Region proposals</th><th>CNN feature computation</th><th>Main bottleneck / improvement</th></tr></thead><tbody>
+    <tr><td>R-CNN</td><td>Selective Search</td><td>CNN run separately per proposal</td><td>Accurate conceptually, but repeated CNN work and multi-stage training</td></tr>
+    <tr><td>Fast R-CNN</td><td>Selective Search</td><td>Shared feature map once per image</td><td>Faster region processing, but external proposal stage remains</td></tr>
+    <tr><td>Faster R-CNN</td><td>Learned RPN</td><td>Shared backbone features</td><td>Proposal generation is learned and shares image features</td></tr></tbody></table></div>
+  <div class="callout"><b class="lab">Still two-stage</b><p>Faster R-CNN generates proposals first, then the detection head classifies and refines them. The next topic compares this with single-stage detectors, SSD and YOLO. Note that the RPN does not perform final object classification.</p></div>
+  <div class="quiz" data-quiz="q7"></div>
+  <div class="quiz" data-quiz="q8"></div>
+  <div class="quiz" data-quiz="q9"></div>
+  <div class="quiz" data-quiz="q10"></div>
+  <div class="quiz" data-quiz="q11"></div>
+</section>
+
+<!-- 9 -->
+<section class="sec" id="infer" aria-labelledby="h-in" data-nav="Pretrained inference">
+  <div class="sec-head"><span class="num">09</span><h2 class="t" id="h-in">Running a pretrained Faster R-CNN</h2></div>
+  <p>TorchVision's pretrained <b>Faster R-CNN ResNet-50 FPN</b> (COCO weights) shows inference and output interpretation; nothing here is fine-tuned. The model takes a <i>list</i> of image tensors and returns, per image, <b>boxes, labels and scores</b>. TorchVision already applies score filtering and NMS inside post-processing, so a visualization threshold filters detections that were already returned: it is not the NMS IoU threshold.</p>
+  <div class="viz" id="inf-viz">
+    <p class="vt">Visualizer · The confidence threshold on recorded scores</p>
+    <p class="vd">A recorded run on a dog-walking photo returned <b>17 detections</b> after post-processing. Only the first five scores were printed, so only these are shown.</p>
+    <div class="controls"><label for="if-t">Threshold</label><input type="range" id="if-t" min="0" max="100" value="60" style="max-width:240px"> <b class="mono" id="if-tv"></b><button type="button" class="chip" data-t="30">0.30</button><button type="button" class="chip" data-t="60">0.60</button><button type="button" class="chip" data-t="85">0.85</button></div>
+    <div class="bars" id="if-bars"></div>
+    <div class="readout" id="if-read" aria-live="polite"></div>
+  </div>
+  <p>Questions to ask of any detection: which predictions appear or disappear as the threshold moves, and what failure cases occur (small objects, occlusion, unusual viewpoints, confusing backgrounds)? To classify errors you need independent annotation, never the model's own prediction as ground truth:</p>
+  <div class="viz" id="err-viz">
+    <p class="vt">Visualizer · Types of detection error</p>
+    <div class="controls"><div class="seg" id="er-seg" role="group" aria-label="Error"></div></div>
+    <div class="readout" id="er-read" aria-live="polite"></div>
+  </div>
+  <div class="quiz" data-quiz="q12"></div>
+  <details class="code"><summary>Code and output</summary>
+<pre><code>weights = FasterRCNN_ResNet50_FPN_Weights.DEFAULT
+detector = fasterrcnn_resnet50_fpn(weights=weights).to(device).eval()
+preprocess = weights.transforms(); categories = weights.meta["categories"]
+with torch.inference_mode():
+    prediction = detector([preprocess(image).to(device)])[0]      # dict: boxes, labels, scores
+<span class="out">Number of detections after model post-processing: 17
+First scores: [0.9997137188911438, 0.9987897276878357, 0.9986745119094849, 0.9931697845458984, 0.6630570292472839]</span></code></pre></details>
+</section>
+
+<!-- 10 -->
+<section class="sec" id="recap" aria-labelledby="h-rc" data-nav="Recap">
+  <div class="sec-head"><span class="num">10</span><h2 class="t" id="h-rc">Recap and exit check</h2></div>
+  <p>Answer each prompt in your own words, then flip the card. Up next: single-stage detectors, SSD and YOLO, compared with two-stage proposal-based detection.</p>
+  <div class="fcs" id="fcs"></div>
+</section>
+
+</main>
+
+<footer>Computer Vision 7 post read</footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=n=>Number(n).toLocaleString('en-US');
+function h(tag,attrs,...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='class')e.className=v;else if(k==='style')e.style.cssText=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(k,v);}
+  kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(c));});return e;}
+function seg(host,items,cur,cb){host.innerHTML='';items.forEach(([v,l])=>{const b=h('button',{type:'button','aria-pressed':String(v===cur)},l);b.addEventListener('click',()=>{$$('button',host).forEach((x,i)=>x.setAttribute('aria-pressed',String(items[i][0]===v)));cb(v);});host.append(b);});}
+function mkGrid(host,rows,cols,fn){host.innerHTML='';host.style.setProperty('--cols',cols);const cells=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const d=h('div',{class:'c'});fn&&fn(d,r,c);host.append(d);cells.push(d);}return cells;}
+
+/* nav */
+(function(){const toc=$('#toc');$$('section.sec').forEach(s=>toc.append(h('a',{href:'#'+s.id},s.dataset.nav)));const links=$$('a',toc);
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id));const on=$('a.on',toc);if(on)on.scrollIntoView({block:'nearest',inline:'center'});}}),{rootMargin:'-30% 0px -60% 0px'});
+ $$('section.sec').forEach(s=>io.observe(s));const prog=$('#prog');const upd=()=>{const d=document.documentElement;prog.style.width=(100*d.scrollTop/(d.scrollHeight-d.clientHeight||1))+'%';};addEventListener('scroll',upd,{passive:true});upd();})();
+
+/* ---------- line chart ---------- */
+function lineChart(host,o){
+  host.innerHTML='';
+  const W=640,H=300,m={l:56,r:16,t:14,b:44},n=o.xs.length,dec=o.dec??3;
+  const all=o.series.flatMap(s=>s.vals);let lo=o.ymin??Math.min(...all),hi=o.ymax??Math.max(...all);if(o.ymin==null||o.ymax==null){const p=(hi-lo)*.08||.1;if(o.ymin==null)lo-=p;if(o.ymax==null)hi+=p;}
+  const x=i=>m.l+(n===1?0:i*(W-m.l-m.r)/(n-1)),y=v=>m.t+(hi-v)*(H-m.t-m.b)/(hi-lo||1);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${o.aria||'Line chart'}. Use left and right arrow keys to read values.">`;
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,yy=y(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${yy}" y2="${yy}" stroke="#D5C7A3" stroke-width="1"/><text x="${m.l-8}" y="${yy+4}" font-size="11" text-anchor="end">${(+v.toFixed(2)).toString()}</text>`;}
+  const step=Math.ceil(n/12);o.xs.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${x(i)}" y="${H-m.b+16}" font-size="11" text-anchor="middle">${l}</text>`;});
+  s+=`<text x="${(W+m.l)/2}" y="${H-6}" font-size="12" text-anchor="middle">${o.xTitle||'Epoch'}</text><text x="14" y="${H/2}" font-size="12" text-anchor="middle" transform="rotate(-90 14 ${H/2})">${o.yTitle||''}</text>`;
+  if(o.zero!==false&&lo<0&&hi>0)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#18261F" stroke-width="1.5"/>`;
+  o.series.forEach(se=>{const pts=se.vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="${se.color}" stroke-width="${se.w||2.5}" ${se.dash?`stroke-dasharray="${se.dash}"`:''} stroke-linejoin="round"/>`;
+    if(n<=30)se.vals.forEach((v,i)=>{s+=se.shape==='sq'?`<rect x="${x(i)-3.5}" y="${y(v)-3.5}" width="7" height="7" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M${x(i)},${y(v)-4.5}l4.5,8h-9z" fill="${se.color}"/>`:`<circle cx="${x(i)}" cy="${y(v)}" r="3.3" fill="${se.color}"/>`;});});
+  (o.marks||[]).forEach(mk=>{s+=`<line x1="${x(mk.i)}" x2="${x(mk.i)}" y1="${m.t}" y2="${H-m.b}" stroke="${mk.color||'#18261F'}" stroke-width="2" stroke-dasharray="3 3"/><text x="${x(mk.i)+4}" y="${m.t+12}" font-size="11" font-weight="700" style="fill:#18261F">${mk.label}</text>`;});
+  s+=`<g id="hv" style="display:none"><line id="hl" y1="${m.t}" y2="${H-m.b}" stroke="#18261F" stroke-width="1.5"/></g></svg>`;
+  const leg=h('div',{class:'legend'});o.series.forEach(se=>leg.append(h('span',{},(()=>{const e=document.createElementNS('http://www.w3.org/2000/svg','svg');e.setAttribute('viewBox','0 0 34 12');e.innerHTML=`<line x1="2" x2="32" y1="6" y2="6" stroke="${se.color}" stroke-width="3" ${se.dash?`stroke-dasharray="${se.dash}"`:''}/>`+(se.shape==='sq'?`<rect x="13" y="2" width="8" height="8" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M17,1l5,10h-10z" fill="${se.color}"/>`:`<circle cx="17" cy="6" r="4" fill="${se.color}"/>`);return e;})(),se.name)));
+  const box=h('div');box.innerHTML=s;const svg=box.firstChild;const rd=h('div',{class:'readout','aria-live':'polite'},o.hint||'Hover the chart, or focus it and use ← → keys, to read exact values.');
+  host.append(leg,box,rd);
+  const hv=$('#hv',svg),hl=$('#hl',svg);let idx=0;
+  function show(i){idx=Math.max(0,Math.min(n-1,i));hv.style.display='';hl.setAttribute('x1',x(idx));hl.setAttribute('x2',x(idx));
+    rd.innerHTML=`<b>${o.xName||'Epoch'} ${o.xs[idx]}</b> — `+o.series.map(se=>`${se.name}: <b>${se.vals[idx].toFixed(dec)}</b>`).join(' · ');}
+  svg.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));});
+  svg.addEventListener('touchmove',e=>{const t=e.touches[0],r=svg.getBoundingClientRect(),px=(t.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));},{passive:true});
+  svg.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();show(idx+1);}if(e.key==='ArrowLeft'){e.preventDefault();show(idx-1);}});
+}
+const C={tr:'#1D5A41',va:'#9A5F33'};
+
+function barRows(host,rows){rows.forEach(([l,pct,txt,alt])=>host.append(h('div',{class:'br'},h('span',{},l),h('div',{style:'display:flex;align-items:center'},h('div',{class:'tr',style:'flex:1'},h('div',{class:'fl'+(alt?' alt':''),style:`width:${Math.max(pct,.4)}%`})),h('span',{class:'vl'},txt)))));}
+const NS='http://www.w3.org/2000/svg';
+const rect=(x,y,w,h,o)=>`<rect x="${x}" y="${y}" width="${Math.max(0,w)}" height="${Math.max(0,h)}" ${o||''}/>`;
+function iou(a,b){const ix=Math.max(0,Math.min(a[2],b[2])-Math.max(a[0],b[0])),iy=Math.max(0,Math.min(a[3],b[3])-Math.max(a[1],b[1])),I=ix*iy,A=Math.max(0,a[2]-a[0])*Math.max(0,a[3]-a[1]),B=Math.max(0,b[2]-b[0])*Math.max(0,b[3]-b[1]),U=A+B-I;return U>0?I/U:0;}
+
+/* ---------- 1 tasks ---------- */
+(function(){
+  const scene=`<rect width="200" height="120" fill="#E7DCC0"/><rect y="85" width="200" height="35" fill="#9FC7AF"/><ellipse cx="55" cy="75" rx="26" ry="16" fill="#9A5F33"/><circle cx="76" cy="58" r="10" fill="#9A5F33"/><ellipse cx="140" cy="82" rx="16" ry="11" fill="#3A8660"/><circle cx="152" cy="68" r="8" fill="#3A8660"/>`;
+  const T={cls:['Classification','One or more labels for the <b>whole image</b>, e.g. “dog, cat”. No locations, so it cannot count instances.',''],loc:['Localization','A class plus <b>one bounding box</b> for the main/target object, e.g. “dog” with its box.',`<rect x="25" y="46" width="62" height="45" fill="none" stroke="#12392A" stroke-width="2.5"/><text x="27" y="43">dog</text>`],det:['Detection','A class <b>and</b> a bounding box for <b>each</b> object: “dog” with one box, “cat” with another.',`<rect x="25" y="46" width="62" height="45" fill="none" stroke="#12392A" stroke-width="2.5"/><text x="27" y="43">dog</text><rect x="122" y="58" width="42" height="35" fill="none" stroke="#12392A" stroke-width="2.5" stroke-dasharray="5 3"/><text x="124" y="55">cat</text>`]};
+  let k='cls';function u(){$('#tk-svg').innerHTML=scene+T[k][2];$('#tk-read').innerHTML=`<b>${T[k][0]}.</b> ${T[k][1]}`;}
+  seg($('#tk-seg'),Object.entries(T).map(([a,b])=>[a,b[0]]),'cls',v=>{k=v;u();});u();
+})();
+
+/* ---------- 2 boxes ---------- */
+(function(){
+  const g=k=>+$('#bx-'+k).value||0;
+  function u(){const W=Math.max(1,g('W')),H=Math.max(1,g('H')),[a,b,c,d]=['a','b','c','d'].map(g);const ok=0<=a&&a<c&&c<=W&&0<=b&&b<d&&d<=H;
+    $('#bx-svg').setAttribute('viewBox',`0 0 ${W} ${H}`);$('#bx-svg').innerHTML=`<rect width="${W}" height="${H}" fill="#E7DCC0"/>`+`<rect x="${a}" y="${b}" width="${Math.max(0,c-a)}" height="${Math.max(0,d-b)}" fill="${ok?'rgba(58,134,96,.25)':'rgba(154,95,51,.25)'}" stroke="${ok?'#12392A':'#9A5F33'}" stroke-width="${W/120}" ${ok?'':`stroke-dasharray="${W/60} ${W/90}"`}/>`;
+    $('#bx-read').innerHTML=`xyxy = (${a}, ${b}, ${c}, ${d}) → centre-size = (<b>${(a+c)/2}, ${(b+d)/2}, ${c-a}, ${d-b}</b>). Normalized xyxy = (${(a/W).toFixed(3)}, ${(b/H).toFixed(3)}, ${(c/W).toFixed(3)}, ${(d/H).toFixed(3)}). `+(ok?'<b style="color:var(--g700)">Valid box.</b>':'<b style="color:var(--clay)">Invalid:</b> needs 0 ≤ x_min < x_max ≤ W and 0 ≤ y_min < y_max ≤ H.');}
+  ['W','H','a','b','c','d'].forEach(k=>$('#bx-'+k).addEventListener('input',u));u();
+  const Q=[['Classes and instances','What are the classes and what exactly counts as an instance?'],['Box quality','Are boxes tight and consistent? Are truncated or occluded objects annotated consistently?'],['Leakage','Are images split by source, camera, location or time to reduce train/test leakage?'],['Rare conditions','Are lighting, distance, clutter and occlusion represented?'],['Error costs','What are the costs of false positives and false negatives?'],['Review and privacy','Who reviews uncertain predictions, and how is privacy protected?']];
+  let k=0;const d=()=>$('#ck-read').innerHTML=`<b>${k+1}. ${Q[k][0]}.</b> ${Q[k][1]}`;seg($('#ck-seg'),Q.map((q,i)=>[i,String(i+1)]),0,v=>{k=+v;d();});d();
+})();
+
+/* ---------- 3 localizer ---------- */
+(function(){
+  const S=[['Image','A 224 × 224 normalized image tensor goes in.'],['ResNet101 backbone','Pretrained, with its final <code>fc</code> replaced by <code>Identity</code>: outputs a feature vector (<code>in_features</code>).'],['Classification head','<code>Linear(in_features, num_classes)</code>: class logits for the target.'],['Regression head','<code>Linear → ReLU → Linear(·, 4) → Sigmoid</code>: normalized (cx, cy, width, height).'],['Decode','Convert to clipped (x1, y1, x2, y2). Corners are guaranteed ordered.']];
+  let cur=1;const p=$('#ar-pipe');S.forEach((s,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node','aria-pressed':'false'},s[0]);b.addEventListener('click',()=>{cur=i;u();});p.append(b);});
+  function u(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$('#ar-read').innerHTML=S[cur][1]+(cur>=2&&cur<4?' (Two heads share the same features.)':'');}u();
+  let m='corner';const V=[.2,.3,.7,.8];const c=$('#dc-c');
+  function build(){c.innerHTML='';const L=m==='corner'?['x1','y1','x2','y2']:['cx','cy','width','height'];L.forEach((l,i)=>c.append(h('label',{for:'dv'+i},l+' '),h('input',{type:'range',id:'dv'+i,min:0,max:100,value:V[i]*100,style:'max-width:110px'})));$$('#dc-c input').forEach((x,i)=>x.addEventListener('input',()=>{V[i]=x.value/100;r();}));}
+  function r(){const v=V;let b;if(m==='corner')b=[v[0],v[1],v[2],v[3]];else b=[Math.max(0,v[0]-v[2]/2),Math.max(0,v[1]-v[3]/2),Math.min(1,v[0]+v[2]/2),Math.min(1,v[1]+v[3]/2)];
+    const ok=b[0]<=b[2]&&b[1]<=b[3];$('#dc-svg').innerHTML=`<rect width="100" height="100" fill="#E7DCC0"/>`+(ok?`<rect x="${b[0]*100}" y="${b[1]*100}" width="${(b[2]-b[0])*100}" height="${(b[3]-b[1])*100}" fill="rgba(58,134,96,.25)" stroke="#12392A" stroke-width="1.5"/>`:`<text x="6" y="52" style="font-size:7px">invalid: negative width/height</text>`);
+    $('#dc-read').innerHTML=`Box = (${b.map(x=>x.toFixed(2)).join(', ')}) → `+(ok?'<b style="color:var(--g700)">valid</b>.':'<b style="color:var(--clay)">invalid</b>: x1 > x2 or y1 > y2. Independent sigmoid corners can do this; centre + size cannot.');}
+  seg($('#dc-seg'),[['corner','Four independent corners'],['centre','Centre + size (corrected head)']],'corner',v=>{m=v;build();r();});build();r();
+  const sm=x=>x.map(Math.exp),ce=(l,t)=>{const e=sm(l);return -Math.log(e[t]/e.reduce((a,b)=>a+b,0));};
+  const cls=(ce([2,.4,-.2],0)+ce([.1,1.8,.3],1))/2;const P=[.1,.2,.7,.8,.2,.1,.8,.9],T=[.12,.18,.68,.82,.22,.12,.78,.88];const sl=P.reduce((s,x,i)=>{const d=Math.abs(x-T[i]);return s+(d<1?.5*d*d:d-.5)},0)/8;
+  const L=$('#ls-l');function ls(){const lam=+L.value;$('#ls-lv').textContent=lam;const tot=cls+lam*sl;$('#ls-bars').innerHTML='';barRows($('#ls-bars'),[['Classification',cls/Math.max(tot,1e-9)*100,cls.toFixed(4)],['λ × box',lam*sl/Math.max(tot,1e-9)*100,(lam*sl).toFixed(4),true]]);$('#ls-read').innerHTML=`Cross-entropy <b>${cls.toFixed(4)}</b> + ${lam} × Smooth L1 <b>${sl.toFixed(4)}</b> = total <b>${tot.toFixed(4)}</b>`+(lam===1?' (recorded: 0.3064 + 0.0002 = 0.3066).':'.')+' Bars show each term\'s share of the total.';}
+  L.addEventListener('input',ls);ls();
+})();
+
+/* ---------- 4 IoU ---------- */
+(function(){
+  const GT=[10,10,60,60],P=[20,20,70,70];const c=$('#io-c');['x1','y1','x2','y2'].forEach((l,i)=>c.append(h('label',{for:'io'+i},l+' '),h('input',{type:'range',id:'io'+i,min:0,max:100,value:P[i],style:'max-width:110px'}),h('b',{class:'mono',id:'iov'+i,style:'min-width:2em'})));
+  function u(){const p=[0,1,2,3].map(i=>+$('#io'+i).value);p.forEach((v,i)=>$('#iov'+i).textContent=v);const ix=Math.max(0,Math.min(GT[2],p[2])-Math.max(GT[0],p[0])),iy=Math.max(0,Math.min(GT[3],p[3])-Math.max(GT[1],p[1])),I=ix*iy,A=50*50,B=Math.max(0,p[2]-p[0])*Math.max(0,p[3]-p[1]),U=A+B-I,v=U>0?I/U:0;
+    $('#io-svg').innerHTML=`<rect width="100" height="100" fill="#E7DCC0"/>`+rect(GT[0],GT[1],50,50,'fill="none" stroke="#12392A" stroke-width="1.5"')+rect(p[0],p[1],p[2]-p[0],p[3]-p[1],'fill="none" stroke="#9A5F33" stroke-width="1.5" stroke-dasharray="4 2"')+rect(Math.max(GT[0],p[0]),Math.max(GT[1],p[1]),ix,iy,'fill="rgba(58,134,96,.45)"')+`<text x="2" y="97">solid = ground truth · dashed = prediction · green = intersection</text>`;
+    $('#io-read').innerHTML=`Intersection ${ix}×${iy} = <b>${I}</b>. Union = 2500 + ${B} − ${I} = <b>${U}</b>. IoU = ${I}/${U} = <b>${v.toFixed(3)}</b>`+(v===0?' (no overlap).':v>.95?' (near-perfect overlap).':'.');}
+  $$('#io-c input').forEach(i=>i.addEventListener('input',u));u();
+  const IV=[.82,.47,.65,.9];const m=$('#mi-c');IV.forEach((v,i)=>m.append(h('input',{type:'number',step:.01,min:0,max:1,value:v,'aria-label':'IoU of image '+(i+1),style:'width:4.6em'})));
+  function mi(){const v=$$('#mi-c input').map(x=>+x.value||0);$('#mi-read').innerHTML=`Mean box IoU = (${v.join(' + ')}) / ${v.length} = <b>${(v.reduce((a,b)=>a+b,0)/v.length).toFixed(3)}</b>.`;}
+  $$('#mi-c input').forEach(i=>i.addEventListener('input',mi));mi();
+})();
+
+/* ---------- 5 windows + NMS ---------- */
+(function(){
+  function w(){const W=+$('#wn-W').value||1,H=+$('#wn-H').value||1,w0=+$('#wn-w').value||1,s=Math.max(1,+$('#wn-s').value||1),n=Math.max(1,+$('#wn-n').value||1);let tot=0;const parts=[];for(let i=0;i<n;i++){const sz=Math.round(w0*(1+.5*i));const nx=sz>W?0:Math.floor((W-sz)/s)+1,ny=sz>H?0:Math.floor((H-sz)/s)+1;tot+=nx*ny;parts.push(`${sz}px: ${(nx*ny).toLocaleString()}`);}
+    $('#wn-read').innerHTML=`Windows per scale: ${parts.join(' · ')}. Total: <b>${tot.toLocaleString()}</b> crops to classify, for a single image.`;}
+  ['W','H','w','s','n'].forEach(k=>$('#wn-'+k).addEventListener('input',w));w();
+  const B=[[10,10,100,100],[15,15,98,98],[120,20,200,100]],S=[.95,.88,.72];
+  function n(){const t=$('#nm-i').value/100,ct=$('#nm-c').value/100;$('#nm-iv').textContent=t.toFixed(2);$('#nm-cv').textContent=ct.toFixed(2);
+    const st=B.map(()=>'below');const idx=B.map((_,i)=>i).filter(i=>S[i]>=ct).sort((a,b)=>S[b]-S[a]);const rem=[...idx];const why={};
+    while(rem.length){const i=rem.shift();st[i]='kept';for(let j=rem.length-1;j>=0;j--){const o=iou(B[i],B[rem[j]]);if(o>t){st[rem[j]]='sup';why[rem[j]]=`IoU ${o.toFixed(2)} with box ${i} > ${t.toFixed(2)}`;rem.splice(j,1);}}}
+    let sv='<rect width="210" height="110" fill="#E7DCC0"/>';B.forEach((b,i)=>{const s=st[i];sv+=rect(b[0],b[1]+4,b[2]-b[0],b[3]-b[1],`fill="none" stroke="${s==='kept'?'#12392A':s==='sup'?'#9A5F33':'#8a8470'}" stroke-width="${s==='kept'?2.5:1.5}" stroke-dasharray="${s==='kept'?'':s==='sup'?'5 3':'1 3'}"`)+`<text x="${b[0]+2}" y="${b[1]+(i===1?30:12)}">#${i} ${S[i]}: ${s==='kept'?'kept':s==='sup'?'suppressed':'below conf.'}</text>`;});
+    $('#nm-svg').innerHTML=sv;const kept=B.map((_,i)=>i).filter(i=>st[i]==='kept');
+    $('#nm-read').innerHTML=`Kept: <b>[${kept.join(', ')}]</b>. IoU(#0, #1) = <b>${iou(B[0],B[1]).toFixed(3)}</b>, so #1 is suppressed whenever the NMS threshold is below that value.`+Object.entries(why).map(([i,t])=>` #${i}: ${t}.`).join('')+(ct>0?` Boxes scoring under ${ct.toFixed(2)} were dropped <i>before</i> NMS by the confidence threshold.`:'')+' (Source: thresholds 0.3 and 0.7 both keep [0, 2].)';}
+  $('#nm-i').addEventListener('input',n);$('#nm-c').addEventListener('input',n);n();
+})();
+
+/* ---------- 6 R-CNN ---------- */
+(function(){
+  const S=[['1 · Selective Search','Generate candidate region proposals.'],['2 · Crop and warp','Crop each region and warp it to a fixed input size.'],['3 · CNN per region','Run a CNN separately on each region to extract features.'],['4 · Classify','Classify each region (original R-CNN used class-specific SVMs).'],['5 · Refine','Refine the box with bounding-box regression.']];
+  let cur=2;const p=$('#rc-pipe');S.forEach((s,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node','aria-pressed':'false'},s[0]);b.addEventListener('click',()=>{cur=i;u();});p.append(b);});
+  function u(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$('#rc-read').innerHTML=S[cur][1]+(cur===2?' <b style="color:var(--clay)">This repeats feature extraction for overlapping regions.</b>':'');}u();
+  function c(){const n=Math.max(1,+$('#cs-n').value||1);$('#cs-bars').innerHTML='';barRows($('#cs-bars'),[['R-CNN',100,n.toLocaleString()+' passes'],['Fast R-CNN',100/n,'1 pass',true]]);$('#cs-read').innerHTML=`${n.toLocaleString()} proposals → R-CNN: <b>${n.toLocaleString()}</b> backbone passes; Fast R-CNN: <b>1</b> shared feature map, with regions read from it.`;}
+  $('#cs-n').addEventListener('input',c);c();
+})();
+
+/* ---------- 7 ROI pooling ---------- */
+(function(){
+  const V=[];for(let r=0;r<8;r++){V.push([]);for(let c=0;c<8;c++)V[r].push((r*5+c*3+r*c)%10);}
+  const fm=$('#ro-fm');const cells=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++){const d=h('div',{},String(V[r][c]));fm.append(d);cells.push(d);}
+  function u(){const y=Math.min(6,Math.max(0,+$('#ro-y').value||0)),x=Math.min(6,Math.max(0,+$('#ro-x').value||0)),hh=Math.min(8-y,Math.max(2,+$('#ro-h').value||2)),ww=Math.min(8-x,Math.max(2,+$('#ro-w').value||2));
+    cells.forEach(c=>c.className='');const out=[];
+    for(let i=0;i<2;i++)for(let j=0;j<2;j++){const r0=y+Math.floor(i*hh/2),r1=y+Math.ceil((i+1)*hh/2),c0=x+Math.floor(j*ww/2),c1=x+Math.ceil((j+1)*ww/2);let mx=-1,at=null;for(let r=r0;r<r1;r++)for(let c=c0;c<c1;c++){cells[r*8+c].className='w';if(V[r][c]>mx){mx=V[r][c];at=r*8+c;}}out.push([mx,at]);}
+    out.forEach(([m,a])=>cells[a].className='w m');$('#ro-out').innerHTML=out.map(o=>`<div>${o[0]}</div>`).join('');
+    $('#ro-read').innerHTML=`Region ${hh} × ${ww} (variable) → always <b>2 × 2</b> output: max of each bin (dark cells are the maxima). Any proposal size gives the same output size, which the fully connected layers need.`;}
+  ['y','x','h','w'].forEach(k=>$('#ro-'+k).addEventListener('input',u));u();
+})();
+
+/* ---------- 8 Faster R-CNN ---------- */
+(function(){
+  const S=[['Backbone','Extracts a feature map from the image.'],['RPN','Predicts objectness scores and box offsets for anchor boxes.'],['Anchors','Reference boxes of several scales and aspect ratios at each feature-map location.'],['ROI features','Selected proposals become fixed-size features (TorchVision: an ROI Align-style operator).'],['Detection head','Predicts object classes and refines the boxes.']];
+  let cur=1;const p=$('#fr-pipe');S.forEach((s,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node','aria-pressed':'false'},s[0]);b.addEventListener('click',()=>{cur=i;u();});p.append(b);});
+  function u(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$('#fr-read').innerHTML=`<b>${S[cur][0]}.</b> ${S[cur][1]}`+(cur<=2?' <i>Stage 1: proposals.</i>':' <i>Stage 2: classify and refine.</i>');}u();
+  function a(){const s=Math.min(4,Math.max(1,+$('#an-s').value||1)),r=Math.min(3,Math.max(1,+$('#an-r').value||1)),H=+$('#an-H').value||1,W=+$('#an-W').value||1,ratios=[1,.5,2].slice(0,r),sizes=[16,28,44,64].slice(0,s);
+    let sv='<rect width="100" height="100" fill="#E7DCC0"/><circle cx="50" cy="50" r="1.6" fill="#18261F"/>';sizes.forEach((z,i)=>ratios.forEach((q,j)=>{const w=z*Math.sqrt(q),hh=z/Math.sqrt(q);sv+=rect(50-w/2,50-hh/2,w,hh,`fill="none" stroke="${i%2?'#9A5F33':'#12392A'}" stroke-width="1" ${j===1?'stroke-dasharray="3 2"':j===2?'stroke-dasharray="1 2"':''}`);}));$('#an-svg').innerHTML=sv;
+    $('#an-read').innerHTML=`${s} scales × ${r} aspect ratios = <b>${s*r}</b> anchors per location; on a ${H} × ${W} feature map that is ${H*W} locations × ${s*r} = <b>${(H*W*s*r).toLocaleString()}</b> anchors for the RPN to score. Solid/dashed/dotted outlines are different aspect ratios.`;}
+  ['s','r','H','W'].forEach(k=>$('#an-'+k).addEventListener('input',a));a();
+  const F={rcnn:['R-CNN','Selective Search proposals; a CNN run separately per proposal. Conceptually accurate, but repeated CNN work and multi-stage training.'],fast:['Fast R-CNN','Selective Search proposals; one shared feature map per image, ROI Pooling to fixed size. Faster region processing, but the external proposal stage remains the bottleneck.'],faster:['Faster R-CNN','A learned RPN generates proposals from shared backbone features. Proposal generation is learned and shares image features; still two-stage.']};
+  let k='rcnn';const d=()=>$('#fm-read').innerHTML=`<b>${F[k][0]}.</b> ${F[k][1]}`;seg($('#fm-seg'),Object.entries(F).map(([a,b])=>[a,b[0]]),'rcnn',v=>{k=v;d();});d();
+})();
+
+/* ---------- 9 inference ---------- */
+(function(){
+  const S=[.9997,.9988,.9987,.9932,.6631];const t=$('#if-t');
+  function u(){const th=t.value/100;$('#if-tv').textContent=th.toFixed(2);$('#if-bars').innerHTML='';barRows($('#if-bars'),S.map((s,i)=>[`Detection ${i+1}`+(s>=th?' ✓':' ✗'),s*100,s.toFixed(4),s>=th]));const n=S.filter(s=>s>=th).length;
+    $('#if-read').innerHTML=`Threshold ${th.toFixed(2)}: <b>${n} of these 5</b> recorded scores pass (✓ passes, ✗ filtered out). The other 12 detections' scores were not printed, so the total passing is not known. Detection 5 (0.6631) survives 0.60 but disappears at 0.85.`;}
+  t.addEventListener('input',u);$$('#inf-viz [data-t]').forEach(b=>b.addEventListener('click',()=>{t.value=b.dataset.t;u();}));u();
+  const E={fp:['False positive','The model reports an object that is not there. Needs independent ground truth to identify.'],fn:['False negative','A real object is missed. Needs independent annotation: the model\'s own output cannot reveal what it missed.'],loc:['Localization error','The class is right but the box is poorly placed: low IoU with the true box.']};
+  let k='fp';const d=()=>$('#er-read').innerHTML=`<b>${E[k][0]}.</b> ${E[k][1]}`;seg($('#er-seg'),Object.entries(E).map(([a,b])=>[a,b[0]]),'fp',v=>{k=v;d();});d();
+})();
+
+/* ---------- quizzes ---------- */
+const QZ={
+ q1:{q:'A system must return a class label and a bounding box for every person in a crowded image. Which task is required?',o:['Object detection across the image','Image classification for the scene','Image retrieval using embeddings','Single-label image recognition only'],a:0,e:'Detection returns locations and classes for multiple objects.'},
+ q2:{q:'Which output best describes object localization?',o:['A ranked list of similar images','A class label for the whole image','A class prediction with one target bounding box','A pixel-level semantic mask for every region'],a:2,e:'Localization predicts what the target is and where it is.'},
+ q3:{q:'What does IoU measure when comparing a predicted box with a ground-truth box?',o:['The fraction of correctly classified pixels','The inference time required to produce a box','The overlap area divided by the union area','The probability that the predicted class is correct'],a:2,e:'IoU is intersection area divided by union area.'},
+ q4:{q:'Why does an object-localization model need a regression head?',o:['To retrieve similar images from a vector index','To convert image pixels into class names only','To calculate the learning-rate schedule','To predict continuous bounding-box coordinates'],a:3,e:'Box coordinates are continuous values, so the model needs a regression output.'},
+ q5:{q:'What is the key efficiency improvement in Fast R-CNN over the original R-CNN?',o:['It removes the need for region proposals','It replaces the CNN with a language model','It extracts a shared feature map once per image','It predicts only one bounding box for the image'],a:2,e:'Fast R-CNN shares convolutional computation across region proposals.'},
+ q6:{q:'What is the purpose of ROI Pooling in Fast R-CNN?',o:['To create candidate regions using anchors','To suppress duplicate predictions after inference','To compute the overlap between two boxes','To convert each proposal feature into a fixed spatial size'],a:3,e:'ROI Pooling produces a fixed-size representation from a variable-size region.'},
+ q7:{q:'Which method is used by the original R-CNN to generate candidate regions?',o:['Selective Search','Softmax classification','ROI Pooling','Anchor objectness prediction'],a:0,e:'Selective Search generates candidate region proposals in original R-CNN.'},
+ q8:{q:'What remains a separate proposal-generation bottleneck in Fast R-CNN?',o:['The shared convolutional feature map','The final class prediction layer','Selective Search region proposals','The bounding-box regression head'],a:2,e:'Fast R-CNN still relies on an external proposal method.'},
+ q9:{q:'What does the RPN predict for its anchors?',o:['Only the final class name for each image','Image embeddings for nearest-neighbour search','Pixel-wise masks for every object','Objectness scores and bounding-box offsets'],a:3,e:'The RPN predicts whether anchors contain objects and how to refine them.'},
+ q10:{q:'Which statement about Faster R-CNN is correct?',o:['It relies on external Selective Search proposals','It predicts only one box for the whole image','It removes the region-proposal stage completely','It uses a learned RPN before the detection head'],a:3,e:'Faster R-CNN uses an RPN to propose regions before final classification and refinement.'},
+ q11:{q:'Why are anchor boxes used in an RPN?',o:['To encode image captions as text tokens','To compute the average precision across classes','To provide reference boxes at feature-map locations','To replace the backbone feature extractor'],a:2,e:'Anchors provide reference shapes and locations for box prediction.'},
+ q12:{q:'Which output should be inspected to understand a pretrained detector\'s localization result?',o:['Only the image file name','Only the model\'s training accuracy','The embedding vector without coordinates','Predicted boxes, labels, and confidence scores'],a:3,e:'Those outputs describe where objects are, what they are, and the model\'s confidence.'}
+};
+$$('[data-quiz]').forEach(host=>{const q=QZ[host.dataset.quiz],name='qz-'+host.dataset.quiz;const fb=h('div',{class:'qfb',role:'status','aria-live':'polite'}),fs=h('fieldset',{},h('legend',{class:'sr'},q.q));
+  q.o.forEach((t,i)=>{const id=name+i,inp=h('input',{type:'radio',name,id}),row=h('div',{class:'qo'},inp,h('label',{for:id},t));
+    inp.addEventListener('change',()=>{$$('.qo',fs).forEach(r=>r.classList.remove('right','wrong'));if(i===q.a){row.classList.add('right');fb.innerHTML='<b>Correct.</b> '+q.e;$$('input',fs).forEach(x=>x.disabled=true);}else{row.classList.add('wrong');fb.innerHTML='<b>Not quite.</b> Try another option.';}});fs.append(row);});
+  host.append(h('p',{class:'ql'},'Check yourself'),h('p',{class:'qt'},q.q),fs,fb);});
+
+/* ---------- flashcards ---------- */
+[['Explain classification, localization and detection in one sentence each.','Classification: labels for the whole image. Localization: a class plus a bounding box for one target object. Detection: a class and a box for every object.'],
+ ['Write the IoU formula. What does a value close to 1 mean?','IoU = Area(predicted ∩ ground truth) / Area(predicted ∪ ground truth). Close to 1 means the predicted box almost perfectly overlaps the ground truth.'],
+ ['Why can sliding windows be computationally expensive?','Many locations times many scales create a very large number of windows, most of which contain background, and the same object is hit by many overlapping windows.'],
+ ['What does NMS remove?','Redundant overlapping boxes: it keeps the highest-scoring box and suppresses remaining boxes whose IoU with it exceeds the threshold (typically within a class). Low-score removal is the separate confidence threshold.'],
+ ['What is the key improvement from R-CNN to Fast R-CNN?','The backbone runs once per image to make a shared feature map, instead of running a CNN separately on every proposal.'],
+ ['What does the RPN contribute to Faster R-CNN?','A learned proposal generator on shared features: it scores anchor boxes for objectness and predicts offsets, replacing external Selective Search.'],
+ ['Why is Faster R-CNN still a two-stage detector?','Proposals are generated first (RPN), then the detection head classifies and refines them.'],
+ ['Why predict (centre, size) rather than four independent corners?','Independent sigmoid corners can violate x_min ≤ x_max or y_min ≤ y_max; centre and size decode to ordered corners.'],
+ ['Take-home: compare R-CNN, Fast R-CNN and Faster R-CNN.','Cover proposal generation, where CNN features are computed, how regions become fixed-size features, the classification and box-regression stages, and one advantage and one limitation of each.']
+].forEach(([q,a])=>{const b=h('button',{type:'button',class:'fc','aria-expanded':'false',style:'min-height:110px'},h('div',{class:'q'},q),h('span',{class:'hint'},'Click to reveal'),h('div',{class:'a'},a));b.addEventListener('click',()=>b.setAttribute('aria-expanded',String(b.getAttribute('aria-expanded')!=='true')));$('#fcs').append(b);});
+</script>
+</body>
+</html>
